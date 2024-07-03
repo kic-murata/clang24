@@ -165,8 +165,75 @@ void BattleMode(Chara* c, Mob m) {
 			c->mp *= 0.9;
 		}
 		//[たたかう]
+		if (command == 1) {
+			DisplayStatus(*c);
+			//TurnCountが偶数のときは自キャラの攻撃
+			if (TurnCount % 2 == 0) {
+				BattleMessage(c->sp, &m.sp);
+				//敵キャラの死亡フラグがONなら
+				if (m.sp.state & Dead) {
+					break;
+				}
+			}
+			//TurnCountが奇数のときは敵の攻撃
+			if (TurnCount % 2 == 1) {
+				BattleMessage(m.sp, &c->sp);
+				//状態異常付加確率の計算
+				if (rand() % 100 < m.rate) {
+					printf("状態異常攻撃を受けた！\n");
+					//主人公に状態異常を付加するときには、Atk_Skillフラグを除去しておく
+					c->sp.state |= (m.sp.state & ~Atk_Skill);
+				}
+				//自キャラの死亡フラグがONなら
+				if (c->sp.state & Dead) {
+					break;
+				}
+				else {
+					DisplayStatus(*c);
+				}
+			}
+		}
 
 		//[スキル]
+	}
+}
+/*int DisplayMenu(void)
+* 戦闘モード時のコマンド選択画面を表示
+* 戻り値：選択したコマンドのメニュー番号(-1のみ強制終了）
+*/
+int DisplayMenu(void) {
+	char ch;
+	while (1) {
+		printf("----------\nコマンドを選択\n");
+		printf("1.たたかう\n2.スキル\n3.ぼうぎょ\n\n");
+		ch = getch();
+		if (ch > '0' && ch < '4') {
+			return ch - '0';
+		}
+		else if (ch == 'q') { //隠しコマンド：強制終了'q'
+			return -1;
+		}
+	}
+}
+/*int SkillMenu(Chara c)
+* 戦闘モード時のスキル選択画面を表示
+* 第1引数：Chara型構造体変数（自キャラ）
+* 戻り値：選択したコマンドのメニュー番号
+*/
+int SkillMenu(Chara c) {
+	char ch;
+	int i;
+	while (1) {
+		printf("----------\nスキルを選択\n");
+		for (i = 0; i < Skil_Num; i++) {
+			//自キャラのデータからスキル名を抽出して表示
+			printf("%d.%s\n", i + 1, c.skl[i].name);
+		}
+		printf("\n");
+		ch = getch();
+		if (ch > '0' && ch < '4') {
+			return ch - '0' - 1;
+		}
 	}
 }
 
